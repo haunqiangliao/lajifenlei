@@ -1,7 +1,7 @@
 import streamlit as st
 from fuzzywuzzy import process
 
-# 全面垃圾分类数据库
+# 全面垃圾分类数据库（2023最新版）
 TRASH_CLASSIFICATION = {
     "可回收物": [
         "报纸", "书本", "纸箱", "包装纸盒", "广告单", "快递纸箱", "打印纸",
@@ -51,53 +51,48 @@ st.set_page_config(
 
 # 主界面
 st.title("🗑️ 上海垃圾分类小助手")
-st.write("输入垃圾名称，查询所属分类（2023最新版）")
+st.write("输入垃圾名称，查询所属分类")
 
 # 模糊搜索功能
 def fuzzy_search(query, choices, limit=5):
-    """返回模糊匹配的结果"""
     results = process.extract(query, choices, limit=limit)
-    return [result[0] for result in results if result[1] > 50]  # 相似度大于50%
+    return [result[0] for result in results if result[1] > 50]
 
-# 搜索框
+# 搜索功能
 search_query = st.text_input("请输入垃圾名称", 
                            placeholder="例如：电池、塑料袋...",
                            key="search_input")
 
-# 实时显示模糊匹配结果
+# 显示搜索结果
 if search_query:
     matches = fuzzy_search(search_query, ALL_ITEMS)
     if matches:
-        selected = st.selectbox("选择你想查询的物品：", 
-                              [""] + matches,
-                              format_func=lambda x: "请选择..." if x == "" else x)
-        
-        if selected:
-            for category, items in TRASH_CLASSIFICATION.items():
-                if selected in items:
-                    st.success(f"『{selected}』属于：{category}")
-                    break
+        selected = st.selectbox("选择匹配的物品：", matches)
+        for category, items in TRASH_CLASSIFICATION.items():
+            if selected in items:
+                st.success(f"『{selected}』属于：{category}")
+                break
     else:
-        st.warning("没有找到匹配的物品，请尝试其他名称")
+        st.warning("没有找到匹配的物品")
 
-# 分类示例展示
+# 分类浏览功能
 st.divider()
-st.subheader("2023年最新垃圾分类指南")
+st.subheader("分类浏览")
 
 tabs = st.tabs(["可回收物", "有害垃圾", "湿垃圾", "干垃圾"])
 for i, (category, items) in enumerate(TRASH_CLASSIFICATION.items()):
     with tabs[i]:
-        st.write(f"#### {category}（共{len(items)}种）")
         cols = st.columns(3)
         for j, item in enumerate(items):
             cols[j%3].write(f"- {item}")
 
 # 页脚
 st.divider()
-st.caption("数据根据《上海市生活垃圾管理条例（2023修订版）》整理")
-st.caption("提示：不确定分类时请选择干垃圾")
+st.caption("数据根据《上海市生活垃圾管理条例》整理")
 
-# 侧边栏部署说明（已修复引号问题）
-st.sidebar.info("""
-**部署说明：**
-1. 需要安装依赖：
+# 侧边栏说明
+st.sidebar.title("使用帮助")
+st.sidebar.write("1. 输入垃圾名称（支持模糊搜索）")
+st.sidebar.write("2. 从下拉框选择最匹配的")
+st.sidebar.write("3. 查看分类结果")
+st.sidebar.write("4. 也可直接浏览下方分类")
