@@ -1,7 +1,7 @@
 import streamlit as st
 from fuzzywuzzy import process
 
-# 全面垃圾分类数据库（2023最新版）
+# 全面垃圾分类数据库
 TRASH_CLASSIFICATION = {
     "可回收物": [
         "报纸", "书本", "纸箱", "包装纸盒", "广告单", "快递纸箱", "打印纸",
@@ -97,7 +97,7 @@ st.divider()
 st.caption("数据根据《上海市生活垃圾管理条例（2023修订版）》整理")
 st.caption("提示：不确定分类时请选择干垃圾")
 
-# 添加requirements.txt内容说明
+# 侧边栏部署说明（已修复引号问题）
 st.sidebar.info("""
 **部署说明：**
 1. 需要安装依赖：
