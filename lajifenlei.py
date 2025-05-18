@@ -1,4 +1,5 @@
 import streamlit as st
+from fuzzywuzzy import process
 
 # 全面垃圾分类数据库（2023最新版）
 TRASH_CLASSIFICATION = {
@@ -36,6 +37,11 @@ TRASH_CLASSIFICATION = {
     ]
 }
 
+# 创建所有垃圾名称的列表
+ALL_ITEMS = []
+for items in TRASH_CLASSIFICATION.values():
+    ALL_ITEMS.extend(items)
+
 # 页面设置
 st.set_page_config(
     page_title="上海垃圾分类小助手",
@@ -47,27 +53,32 @@ st.set_page_config(
 st.title("🗑️ 上海垃圾分类小助手")
 st.write("输入垃圾名称，查询所属分类（2023最新版）")
 
-# 搜索功能
-col1, col2 = st.columns([3, 1])
-with col1:
-    user_input = st.text_input("请输入垃圾名称", placeholder="例如：电池、塑料袋...")
-with col2:
-    st.write("")
-    st.write("")
-    search_btn = st.button("查询")
+# 模糊搜索功能
+def fuzzy_search(query, choices, limit=5):
+    """返回模糊匹配的结果"""
+    results = process.extract(query, choices, limit=limit)
+    return [result[0] for result in results if result[1] > 50]  # 相似度大于50%
 
-if search_btn or user_input:
-    user_input = user_input.strip()
-    if user_input:
-        found = False
-        for category, items in TRASH_CLASSIFICATION.items():
-            if user_input in items:
-                st.success(f"『{user_input}』属于：{category}")
-                found = True
-                break
+# 搜索框
+search_query = st.text_input("请输入垃圾名称", 
+                           placeholder="例如：电池、塑料袋...",
+                           key="search_input")
+
+# 实时显示模糊匹配结果
+if search_query:
+    matches = fuzzy_search(search_query, ALL_ITEMS)
+    if matches:
+        selected = st.selectbox("选择你想查询的物品：", 
+                              [""] + matches,
+                              format_func=lambda x: "请选择..." if x == "" else x)
         
-        if not found:
-            st.warning(f"未找到『{user_input}』的分类，请尝试其他名称")
+        if selected:
+            for category, items in TRASH_CLASSIFICATION.items():
+                if selected in items:
+                    st.success(f"『{selected}』属于：{category}")
+                    break
+    else:
+        st.warning("没有找到匹配的物品，请尝试其他名称")
 
 # 分类示例展示
 st.divider()
@@ -86,16 +97,7 @@ st.divider()
 st.caption("数据根据《上海市生活垃圾管理条例（2023修订版）》整理")
 st.caption("提示：不确定分类时请选择干垃圾")
 
-# 添加搜索建议
-if user_input and not found:
-    st.info("💡 类似物品建议：")
-    similar_items = []
-    for items in TRASH_CLASSIFICATION.values():
-        for item in items:
-            if user_input in item:
-                similar_items.append(item)
-    
-    if similar_items:
-        st.write(", ".join(similar_items[:5]))
-    else:
-        st.write("暂无类似物品")
+# 添加requirements.txt内容说明
+st.sidebar.info("""
+**部署说明：**
+1. 需要安装依赖：
